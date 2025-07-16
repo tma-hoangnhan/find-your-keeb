@@ -5,12 +5,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class AdminOrderResponse {
+public class OrderResponse {
     private Long id;
     private String orderNumber;
-    private String username;
-    private String firstName;
-    private String lastName;
     private List<OrderItemResponse> items;
     private BigDecimal totalAmount;
     private OrderStatus status;
@@ -19,18 +16,14 @@ public class AdminOrderResponse {
     private String paymentMethod;
     private LocalDateTime createdAt;
     private String phoneNumber;
+    private String username;
+    private String firstName;
+    private String lastName;
 
-    // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getOrderNumber() { return orderNumber; }
     public void setOrderNumber(String orderNumber) { this.orderNumber = orderNumber; }
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-    public String getFirstName() { return firstName; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
-    public String getLastName() { return lastName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
     public List<OrderItemResponse> getItems() { return items; }
     public void setItems(List<OrderItemResponse> items) { this.items = items; }
     public BigDecimal getTotalAmount() { return totalAmount; }
@@ -47,4 +40,10 @@ public class AdminOrderResponse {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public String getPhoneNumber() { return phoneNumber; }
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
 } 

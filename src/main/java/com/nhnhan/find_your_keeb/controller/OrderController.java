@@ -1,6 +1,7 @@
 package com.nhnhan.find_your_keeb.controller;
 
 import com.nhnhan.find_your_keeb.dto.CheckoutRequest;
+import com.nhnhan.find_your_keeb.dto.OrderResponse;
 import com.nhnhan.find_your_keeb.entity.Order;
 import com.nhnhan.find_your_keeb.entity.OrderStatus;
 import com.nhnhan.find_your_keeb.service.OrderService;
@@ -40,13 +41,14 @@ public class OrderController {
                 content = @Content(schema = @Schema(implementation = Page.class))),
         @ApiResponse(responseCode = "401", description = "User not authenticated")
     })
-    public ResponseEntity<Page<Order>> getUserOrders(
+    public ResponseEntity<Page<OrderResponse>> getUserOrders(
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
         Long userId = getCurrentUserId();
         Pageable pageable = PageRequest.of(page, size);
         Page<Order> orders = orderService.getUserOrders(userId, pageable);
-        return ResponseEntity.ok(orders);
+        Page<OrderResponse> dtoPage = orders.map(orderService::toOrderResponse);
+        return ResponseEntity.ok(dtoPage);
     }
 
     @GetMapping("/{id}")
@@ -58,7 +60,7 @@ public class OrderController {
         @ApiResponse(responseCode = "403", description = "Access denied - Order belongs to another user"),
         @ApiResponse(responseCode = "404", description = "Order not found")
     })
-    public ResponseEntity<Order> getOrderById(
+    public ResponseEntity<OrderResponse> getOrderById(
             @Parameter(description = "Order ID") @PathVariable Long id) {
         Order order = orderService.getOrderById(id);
         // Check if the order belongs to the current user
@@ -66,7 +68,7 @@ public class OrderController {
         if (!order.getUser().getId().equals(userId)) {
             throw new RuntimeException("Access denied");
         }
-        return ResponseEntity.ok(order);
+        return ResponseEntity.ok(orderService.toOrderResponse(order));
     }
 
     @PostMapping("/checkout")
@@ -79,10 +81,10 @@ public class OrderController {
         @ApiResponse(responseCode = "404", description = "Cart is empty or product not found"),
         @ApiResponse(responseCode = "409", description = "Insufficient stock")
     })
-    public ResponseEntity<Order> checkout(@Valid @RequestBody CheckoutRequest request) {
+    public ResponseEntity<OrderResponse> checkout(@Valid @RequestBody CheckoutRequest request) {
         Long userId = getCurrentUserId();
         Order order = orderService.checkout(userId, request);
-        return ResponseEntity.ok(order);
+        return ResponseEntity.ok(orderService.toOrderResponse(order));
     }
 
     // Admin endpoints

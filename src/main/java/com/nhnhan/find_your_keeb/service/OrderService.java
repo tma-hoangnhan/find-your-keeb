@@ -16,6 +16,7 @@ import java.util.UUID;
 
 import com.nhnhan.find_your_keeb.dto.AdminOrderResponse;
 import com.nhnhan.find_your_keeb.dto.OrderItemResponse;
+import com.nhnhan.find_your_keeb.dto.OrderResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -143,6 +144,7 @@ public class OrderService {
         dto.setBillingAddress(order.getBillingAddress());
         dto.setPaymentMethod(order.getPaymentMethod());
         dto.setCreatedAt(order.getCreatedAt());
+        dto.setPhoneNumber(order.getUser() != null ? order.getUser().getPhoneNumber() : null);
         // Map order items
         List<OrderItemResponse> itemDtos = order.getItems().stream().map(item -> {
             OrderItemResponse itemDto = new OrderItemResponse();
@@ -150,6 +152,42 @@ public class OrderService {
             itemDto.setProductName(item.getProduct().getName());
             itemDto.setQuantity(item.getQuantity());
             itemDto.setUnitPrice(item.getUnitPrice());
+            return itemDto;
+        }).toList();
+        dto.setItems(itemDtos);
+        return dto;
+    }
+
+    public OrderResponse toOrderResponse(Order order) {
+        OrderResponse dto = new OrderResponse();
+        dto.setId(order.getId());
+        dto.setOrderNumber(order.getOrderNumber());
+        dto.setTotalAmount(order.getTotalAmount());
+        dto.setStatus(order.getStatus());
+        dto.setShippingAddress(order.getShippingAddress());
+        dto.setBillingAddress(order.getBillingAddress());
+        dto.setPaymentMethod(order.getPaymentMethod());
+        dto.setCreatedAt(order.getCreatedAt());
+        dto.setPhoneNumber(order.getUser() != null ? order.getUser().getPhoneNumber() : null);
+        dto.setUsername(order.getUser() != null ? order.getUser().getUsername() : null);
+        dto.setFirstName(order.getUser() != null ? order.getUser().getFirstName() : null);
+        dto.setLastName(order.getUser() != null ? order.getUser().getLastName() : null);
+        // Map order items
+        List<OrderItemResponse> itemDtos = order.getItems().stream().map(item -> {
+            OrderItemResponse itemDto = new OrderItemResponse();
+            itemDto.setId(item.getId());
+            itemDto.setProductName(item.getProduct().getName());
+            itemDto.setQuantity(item.getQuantity());
+            itemDto.setUnitPrice(item.getUnitPrice());
+            itemDto.setProductId(item.getProduct().getId());
+            itemDto.setImageUrl(item.getProduct().getImageUrl());
+            itemDto.setBrand(item.getProduct().getBrand());
+            itemDto.setLayout(item.getProduct().getLayout() != null ? item.getProduct().getLayout().name() : null);
+            itemDto.setSwitchType(item.getProduct().getSwitchType());
+            itemDto.setKeycapMaterial(item.getProduct().getKeycapMaterial());
+            itemDto.setCaseMaterial(item.getProduct().getCaseMaterial());
+            itemDto.setRgbSupport(item.getProduct().getRgbSupport());
+            itemDto.setWirelessSupport(item.getProduct().getWirelessSupport());
             return itemDto;
         }).toList();
         dto.setItems(itemDtos);

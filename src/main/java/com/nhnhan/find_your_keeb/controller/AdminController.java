@@ -7,6 +7,7 @@ import com.nhnhan.find_your_keeb.entity.Product;
 import com.nhnhan.find_your_keeb.service.OrderService;
 import com.nhnhan.find_your_keeb.service.ProductService;
 import com.nhnhan.find_your_keeb.dto.AdminOrderResponse;
+import com.nhnhan.find_your_keeb.dto.OrderResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -86,13 +87,13 @@ public class AdminController {
     @Operation(summary = "Get all orders", description = "Retrieve all customer orders")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Orders retrieved successfully",
-                content = @Content(schema = @Schema(implementation = AdminOrderResponse.class))),
+                content = @Content(schema = @Schema(implementation = OrderResponse.class))),
         @ApiResponse(responseCode = "403", description = "Access denied - Admin role required")
     })
-    public ResponseEntity<List<AdminOrderResponse>> getAllOrders() {
+    public ResponseEntity<List<OrderResponse>> getAllOrders() {
         List<Order> orders = orderService.getAllOrders(Pageable.unpaged()).getContent();
-        List<AdminOrderResponse> dtos = orders.stream()
-            .map(orderService::toAdminOrderResponse)
+        List<OrderResponse> dtos = orders.stream()
+            .map(orderService::toOrderResponse)
             .toList();
         return ResponseEntity.ok(dtos);
     }
@@ -101,29 +102,29 @@ public class AdminController {
     @Operation(summary = "Get order by ID", description = "Retrieve a specific order by its ID")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Order found",
-                content = @Content(schema = @Schema(implementation = Order.class))),
+                content = @Content(schema = @Schema(implementation = OrderResponse.class))),
         @ApiResponse(responseCode = "404", description = "Order not found"),
         @ApiResponse(responseCode = "403", description = "Access denied - Admin role required")
     })
-    public ResponseEntity<Order> getOrderById(
+    public ResponseEntity<OrderResponse> getOrderById(
             @Parameter(description = "Order ID") @PathVariable Long id) {
         Order order = orderService.getOrderById(id);
-        return ResponseEntity.ok(order);
+        return ResponseEntity.ok(orderService.toOrderResponse(order));
     }
 
     @PutMapping("/orders/{id}/status")
     @Operation(summary = "Update order status", description = "Update the status of an order")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Order status updated successfully",
-                content = @Content(schema = @Schema(implementation = Order.class))),
+                content = @Content(schema = @Schema(implementation = OrderResponse.class))),
         @ApiResponse(responseCode = "404", description = "Order not found"),
         @ApiResponse(responseCode = "403", description = "Access denied - Admin role required")
     })
-    public ResponseEntity<Order> updateOrderStatus(
+    public ResponseEntity<OrderResponse> updateOrderStatus(
             @Parameter(description = "Order ID") @PathVariable Long id,
             @Parameter(description = "New order status") @RequestParam OrderStatus status) {
         Order order = orderService.updateOrderStatus(id, status);
-        return ResponseEntity.ok(order);
+        return ResponseEntity.ok(orderService.toOrderResponse(order));
     }
 
     @GetMapping("/orders/status/{status}")
@@ -133,12 +134,13 @@ public class AdminController {
                 content = @Content(schema = @Schema(implementation = Page.class))),
         @ApiResponse(responseCode = "403", description = "Access denied - Admin role required")
     })
-    public ResponseEntity<Page<Order>> getOrdersByStatus(
+    public ResponseEntity<Page<OrderResponse>> getOrdersByStatus(
             @Parameter(description = "Order status to filter by") @PathVariable OrderStatus status,
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Order> orders = orderService.getOrdersByStatus(status, pageable);
-        return ResponseEntity.ok(orders);
+        Page<OrderResponse> dtoPage = orders.map(orderService::toOrderResponse);
+        return ResponseEntity.ok(dtoPage);
     }
 } 
