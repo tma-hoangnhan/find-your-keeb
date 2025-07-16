@@ -36,6 +36,16 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // Filter by layout, brand, and price range
     Page<Product> findByLayoutAndBrandAndPriceBetween(KeyboardLayout layout, String brand, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
     
+    // Filter by layout, brand, price range, and name (AND logic)
+    Page<Product> findByLayoutAndBrandAndPriceBetweenAndNameContainingIgnoreCase(
+        KeyboardLayout layout,
+        String brand,
+        BigDecimal minPrice,
+        BigDecimal maxPrice,
+        String name,
+        Pageable pageable
+    );
+    
     // Search by name containing
     Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
     

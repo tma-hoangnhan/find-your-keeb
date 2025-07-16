@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageImpl;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -30,42 +31,51 @@ public class ProductService {
 
     public Page<Product> getAllProducts(ProductFilterRequest filterRequest) {
         Pageable pageable = createPageable(filterRequest);
-        
-        // Apply filters
+        Page<Product> filteredPage;
+        // Use repository to filter by all except searchTerm
         if (filterRequest.getLayout() != null && filterRequest.getBrand() != null && 
             filterRequest.getMinPrice() != null && filterRequest.getMaxPrice() != null) {
-            return productRepository.findByLayoutAndBrandAndPriceBetween(
-                    filterRequest.getLayout(), filterRequest.getBrand(), 
-                    filterRequest.getMinPrice(), filterRequest.getMaxPrice(), pageable);
+            filteredPage = productRepository.findByLayoutAndBrandAndPriceBetween(
+                filterRequest.getLayout(), filterRequest.getBrand(), 
+                filterRequest.getMinPrice(), filterRequest.getMaxPrice(), pageable);
         } else if (filterRequest.getLayout() != null && filterRequest.getBrand() != null) {
-            return productRepository.findByLayoutAndBrand(filterRequest.getLayout(), 
-                    filterRequest.getBrand(), pageable);
+            filteredPage = productRepository.findByLayoutAndBrand(filterRequest.getLayout(), 
+                filterRequest.getBrand(), pageable);
         } else if (filterRequest.getLayout() != null && filterRequest.getMinPrice() != null && 
                    filterRequest.getMaxPrice() != null) {
-            return productRepository.findByLayoutAndPriceBetween(filterRequest.getLayout(), 
-                    filterRequest.getMinPrice(), filterRequest.getMaxPrice(), pageable);
+            filteredPage = productRepository.findByLayoutAndPriceBetween(filterRequest.getLayout(), 
+                filterRequest.getMinPrice(), filterRequest.getMaxPrice(), pageable);
         } else if (filterRequest.getBrand() != null && filterRequest.getMinPrice() != null && 
                    filterRequest.getMaxPrice() != null) {
-            return productRepository.findByBrandAndPriceBetween(filterRequest.getBrand(), 
-                    filterRequest.getMinPrice(), filterRequest.getMaxPrice(), pageable);
+            filteredPage = productRepository.findByBrandAndPriceBetween(filterRequest.getBrand(), 
+                filterRequest.getMinPrice(), filterRequest.getMaxPrice(), pageable);
         } else if (filterRequest.getLayout() != null) {
-            return productRepository.findByLayout(filterRequest.getLayout(), pageable);
+            filteredPage = productRepository.findByLayout(filterRequest.getLayout(), pageable);
         } else if (filterRequest.getBrand() != null) {
-            return productRepository.findByBrand(filterRequest.getBrand(), pageable);
+            filteredPage = productRepository.findByBrand(filterRequest.getBrand(), pageable);
         } else if (filterRequest.getMinPrice() != null && filterRequest.getMaxPrice() != null) {
-            return productRepository.findByPriceBetween(filterRequest.getMinPrice(), 
-                    filterRequest.getMaxPrice(), pageable);
-        } else if (filterRequest.getSearchTerm() != null && !filterRequest.getSearchTerm().isEmpty()) {
-            return productRepository.findByNameContainingIgnoreCase(filterRequest.getSearchTerm(), pageable);
+            filteredPage = productRepository.findByPriceBetween(filterRequest.getMinPrice(), 
+                filterRequest.getMaxPrice(), pageable);
         } else if (filterRequest.getSwitchType() != null) {
-            return productRepository.findBySwitchType(filterRequest.getSwitchType(), pageable);
+            filteredPage = productRepository.findBySwitchType(filterRequest.getSwitchType(), pageable);
         } else if (filterRequest.getRgbSupport() != null && filterRequest.getRgbSupport()) {
-            return productRepository.findByRgbSupportTrue(pageable);
+            filteredPage = productRepository.findByRgbSupportTrue(pageable);
         } else if (filterRequest.getWirelessSupport() != null && filterRequest.getWirelessSupport()) {
-            return productRepository.findByWirelessSupportTrue(pageable);
+            filteredPage = productRepository.findByWirelessSupportTrue(pageable);
+        } else {
+            filteredPage = productRepository.findAll(pageable);
         }
-        
-        return productRepository.findAll(pageable);
+
+        // If searchTerm is present, filter using Java streams
+        if (filterRequest.getSearchTerm() != null && !filterRequest.getSearchTerm().isEmpty()) {
+            String search = filterRequest.getSearchTerm().toLowerCase();
+            List<Product> filteredList = filteredPage.getContent().stream()
+                .filter(p -> p.getName() != null && p.getName().toLowerCase().contains(search))
+                .toList();
+            // Return a Page object for compatibility
+            return new PageImpl<>(filteredList, pageable, filteredList.size());
+        }
+        return filteredPage;
     }
 
     public Product getProductById(Long id) {
